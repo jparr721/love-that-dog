@@ -33,23 +33,28 @@ def build_model(shape: tuple)->keras.models.Sequential:
             padding='same',
             activation='relu'
         ),
-        keras.layers.MaxPooling2d(pool_size=(2, 2)),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
         keras.layers.Flatten(),
         keras.layers.Dense(
             200000,
-            activation='relu',
-            kernel_constrains=keras.constraints.maxnorm(3)
+            activation='relu'
         ),
         keras.layers.Dropout(0.3),
-        keras.layers.dense(120)
+        keras.layers.Dense(120)
     ])
 
 
-def initialize_model(model: keras.models.Sequential):
+def initialize_model(model: keras.models.Sequential,
+                     image_path: str,
+                     annotation_path: str):
     model.compile(optimizer='adam',
                   loss='mean_squared_error',
                   metrics=['accuracy'])
-    train_model(model)
+    train_model(model, image_path, annotation_path)
+
+
+def flatten(ls: list):
+    return [item for subitem in ls for item in subitem]
 
 
 def train_model(model: keras.models.Sequential,
@@ -60,12 +65,19 @@ def train_model(model: keras.models.Sequential,
     annotations = []
 
     for directory in directories:
-        all_images = glob(image_path + '/' + directory + '/*.jpg')
+        all_img_path = image_path + '/' + directory + '/*.jpg'
+        all_images = glob.glob(all_img_path)
         images.append(all_images)
-        all_annotations = glob(annotation_path + '/' + directory + '/*.jpg')
+        all_annotation_path = annotation_path + '/' + directory + '/*.jpg'
+        all_annotations = glob.glob(all_annotation_path)
         annotations.append(all_annotations)
 
-    X = np.array(images)
+    # Open all of the images
+    images = flatten(images)
+    annotations = flatten(annotations)
+
+    # Ram destroyer 9000
+    X = np.array(flatten([list(Image.open(i, 'r').getdata()) for i in images]))
     y = np.array(annotations)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y)
@@ -104,15 +116,15 @@ def do_the_thing_bro(image: list)->str:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Error bro, we need more than that')
-
     opt = sys.argv[1]
     if not opt.startswith('--'):
         raise Doofus('Idiot, your flags are wrong')
 
     if opt == '--train':
-        train_model(build_model(400, 500, 3), './Images', './Annotation')
+        initialize_model(build_model((400, 500, 3)),
+                         './Images', './Annotation')
 
     if opt == '--go':
+        if len(sys.argv) < 3:
+            raise('Error bro, we need more than that')
         do_the_thing_bro(sys.argv[2])
