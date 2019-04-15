@@ -66,7 +66,6 @@ def flatten(ls: list):
 def fix_images(image_path: str):
     directories = os.listdir(image_path)
     images = []
-    output_dir = './img_fixed'
 
     for d in directories:
         all_img = glob.glob(image_path + '/' + d + '/*.jpg')
@@ -81,14 +80,15 @@ def fix_images(image_path: str):
         img = Image.open(images[i])
         img.resize((dimx, dimy), Image.ANTIALIAS)
         print('Saving...')
-        img.save(output_dir + '/' + 'image_' + str(i) + '.png')
+        # Save over the existing images
+        with open(i) as f:
+            img.save(file=f)
 
     print('done')
 
 
 def fix_annotations(annotation_path: str):
     directories = os.listdir(annotation_path)
-    annotations = []
     for d in directories:
         anno = d.split('-')[1].capitalize()
         if '_' in anno:
@@ -121,7 +121,6 @@ def train_model(model: keras.models.Sequential,
 
     # Take random sample of images
     images = [random.sample(sublist, len(sublist) // 3) for sublist in images]
-
 
     # Open all of the images
     images = flatten(images)
