@@ -79,10 +79,10 @@ def fix_images(image_path: str):
         print('Fixing image: {}'.format(images[i]))
         img = Image.open(images[i])
         img.resize((dimx, dimy), Image.ANTIALIAS)
-        print('Saving...')
+        new_path = images[i]
+        print('Saving to: {}'.format(images[i]))
         # Save over the existing images
-        with open(i) as f:
-            img.save(file=f)
+        img.save(images[i])
 
     print('done')
 
@@ -157,10 +157,6 @@ def do_the_thing_bro(image: list)->str:
     the_model.compile(optimizer='adam',
                       loss='mean_squared_error',
                       metrics=['accuracy'])
-    dimx = 400
-    dimy = 500
-    img = Image.open(image)
-    img.resize((dimx, dimy), Image.ANTIALIAS)
     the_img = np.array(img)
 
     return the_model.predict_classes(the_img)
