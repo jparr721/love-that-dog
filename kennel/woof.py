@@ -79,10 +79,11 @@ def fix_images(image_path: str):
         print('Fixing image: {}'.format(images[i]))
         img = Image.open(images[i])
         img.resize((dimx, dimy), Image.ANTIALIAS)
-        new_path = images[i]
-        print('Saving to: {}'.format(images[i]))
+        new_path = images[i][:len(images[i]) - 3]
+        new_path += 'png'
+        print('Saving to: {}'.format(new_path))
         # Save over the existing images
-        img.save(images[i])
+        img.save(new_path)
 
     print('done')
 
