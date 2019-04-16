@@ -7,8 +7,10 @@ import sys
 import random
 import numpy as np
 import xml.etree.ElementTree as ET
+from itertools import chain
 from PIL import Image
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 
 
@@ -17,13 +19,14 @@ class Doofus(Exception):
 
 
 def build_model(shape: tuple)->keras.models.Sequential:
+    print('Using input shape: {}'.format(shape))
     return keras.models.Sequential([
         keras.layers.Conv2D(
             shape[0],
             (3, 3),
             padding='same',
             activation='relu',
-            input_shape=(shape[0], shape[1], shape[2])
+            input_shape=(shape[0], shape[1], 1)
         ),
         keras.layers.Dropout(0.3),
         keras.layers.Conv2D(
@@ -73,12 +76,10 @@ def fix_images(image_path: str):
 
     images = flatten(images)
 
-    dimx = 50
-    dimy = 50
     for i in range(len(images)):
         print('Fixing image: {}'.format(images[i]))
         img = Image.open(images[i])
-        img.resize((dimx, dimy), Image.ANTIALIAS)
+        img = img.resize((50, 50))
         new_path = images[i][:len(images[i]) - 3]
         new_path += 'png'
         print('Saving to: {}'.format(new_path))
@@ -113,7 +114,7 @@ def train_model(model: keras.models.Sequential,
     annotations = []
 
     for directory in directories:
-        all_img_path = image_path + '/' + directory + '/*.jpg'
+        all_img_path = image_path + '/' + directory + '/*.png'
         all_images = glob.glob(all_img_path)
         images.append(all_images)
         all_annotation_path = annotation_path + '/' + directory + '/*'
@@ -123,11 +124,18 @@ def train_model(model: keras.models.Sequential,
     # Place images in one flat list
     images = flatten(images)
     annotations = flatten(annotations)
+    for i in range(len(annotations)):
+        annotations[i] = open(annotations[i], 'r').readline()
+
+    print(f'Loaded {len(images)} images')
+
+    le = LabelEncoder()
 
     # Ram destroyer 9000
-    X = np.array(flatten([list(Image.open(i, 'r').getdata()) for i in images]))
+    X = np.array([list(chain(*Image.open(i, 'r').getdata())) for i in images])
     y = np.array(annotations)
-    print(X)
+    y = le.fit_transform(y)
+    X = np.expand_dims(X, axis=2)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     X_test, X_valid, y_test, y_valid = train_test_split(X_test, y_test)
@@ -165,7 +173,7 @@ if __name__ == '__main__':
         raise Doofus('Idiot, your flags are wrong')
 
     if opt == '--train':
-        initialize_model(build_model((400, 500, 3)),
+        initialize_model(build_model((50, 50, 3)),
                          './Images', './Annotation')
 
     if opt == '--fix_images':
