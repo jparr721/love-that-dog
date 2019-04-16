@@ -120,10 +120,7 @@ def train_model(model: keras.models.Sequential,
         all_annotations = glob.glob(all_annotation_path)
         annotations.append(all_annotations)
 
-    # Take random sample of images
-    images = [random.sample(sublist, len(sublist) // 3) for sublist in images]
-
-    # Open all of the images
+    # Place images in one flat list
     images = flatten(images)
     annotations = flatten(annotations)
 
@@ -158,9 +155,8 @@ def do_the_thing_bro(image: list)->str:
     the_model.compile(optimizer='adam',
                       loss='mean_squared_error',
                       metrics=['accuracy'])
-    the_img = np.array(img)
 
-    return the_model.predict_classes(the_img)
+    return the_model.predict_classes(np.array(image))
 
 
 if __name__ == '__main__':
