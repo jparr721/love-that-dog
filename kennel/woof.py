@@ -9,6 +9,7 @@ import numpy as np
 import xml.etree.ElementTree as ET
 from itertools import chain
 from PIL import Image
+from keras.preprocessing.image import load_img, img_to_array
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -26,7 +27,7 @@ def build_model(shape: tuple)->keras.models.Sequential:
             (3, 3),
             padding='same',
             activation='relu',
-            input_shape=(shape[0], shape[1], 1)
+            input_shape=(shape[0], shape[1], shape[2])
         ),
         keras.layers.Dropout(0.3),
         keras.layers.Conv2D(
@@ -37,7 +38,7 @@ def build_model(shape: tuple)->keras.models.Sequential:
         ),
         keras.layers.MaxPooling2D(pool_size=(2, 2)),
         keras.layers.Conv2D(
-            shape[0] * 2,
+            shape[0],
             (3, 3),
             padding='same',
             activation='relu'
@@ -45,11 +46,11 @@ def build_model(shape: tuple)->keras.models.Sequential:
         keras.layers.MaxPooling2D(pool_size=(2, 2)),
         keras.layers.Flatten(),
         keras.layers.Dense(
-            2500,
+            shape[0] * shape[1],
             activation='relu'
         ),
         keras.layers.Dropout(0.3),
-        keras.layers.Dense(120)
+        keras.layers.Dense(1)
     ])
 
 
@@ -127,15 +128,15 @@ def train_model(model: keras.models.Sequential,
     for i in range(len(annotations)):
         annotations[i] = open(annotations[i], 'r').readline()
 
-    print(f'Loaded {len(images)} images')
-
     le = LabelEncoder()
 
-    # Ram destroyer 9000
-    X = np.array([list(chain(*Image.open(i, 'r').getdata())) for i in images])
+    X = np.array([np.expand_dims(img_to_array(load_img(i)), axis=0) for i in images])
+    X = np.reshape(X, (len(X), 50, 50, 3))
+    print(f'Using input with shape: {X.shape}')
+    print(f'Loaded {len(X)} images')
+
     y = np.array(annotations)
     y = le.fit_transform(y)
-    X = np.expand_dims(X, axis=2)
 
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     X_test, X_valid, y_test, y_valid = train_test_split(X_test, y_test)
@@ -171,6 +172,8 @@ if __name__ == '__main__':
     opt = sys.argv[1]
     if not opt.startswith('--'):
         raise Doofus('Idiot, your flags are wrong')
+    elif opt not in ['--fix_images', '--fix_annotations', '--go', '--train']:
+        raise Doofus('Dude, your flags don\'t even exist!')
 
     if opt == '--train':
         initialize_model(build_model((50, 50, 3)),
