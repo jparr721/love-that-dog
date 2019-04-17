@@ -50,7 +50,7 @@ def build_model(shape: tuple)->keras.models.Sequential:
             activation='relu'
         ),
         keras.layers.Dropout(0.3),
-        keras.layers.Dense(1)
+        keras.layers.Dense(120)
     ])
 
 
@@ -137,6 +137,8 @@ def train_model(model: keras.models.Sequential,
 
     y = np.array(annotations)
     y = le.fit_transform(y)
+    y = keras.utils.to_categorical(y, 120)
+    print(f'Using labels with shape: {y.shape}')
 
     X_train, X_test, y_train, y_test = train_test_split(X, y)
     X_test, X_valid, y_test, y_valid = train_test_split(X_test, y_test)
