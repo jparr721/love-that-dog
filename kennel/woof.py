@@ -28,44 +28,46 @@ class DogNet(object):
         self.annotation_path = annotation_path
 
     def build_model(self)->keras.models.Sequential:
+        # Taking advantage of stacked inception units
         print('Using input shape: {}'.format(self.shape))
         self.model = keras.models.Sequential([
             keras.layers.Conv2D(
-                self.shape[0],
-                (3, 3),
+                self.shape[0] + 4,
+                (7, 7),
+                strides=2,
                 padding='same',
                 activation='relu',
                 input_shape=(self.shape[0], self.shape[1], self.shape[2])
             ),
-            keras.layers.Dropout(0.3),
+            keras.layers.MaxPooling2D(pool_size=(3, 3), strides=2),
             keras.layers.Conv2D(
-                self.shape[0],
+                self.shape[0] + 4,
                 (3, 3),
                 padding='valid',
                 activation='relu'
             ),
-            keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            keras.layers.Conv2D(
-                self.shape[0],
+            keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+            keras.layers.SeparableConv2D(
+                self.shape[0] + 4,
                 (3, 3),
+                depth_multiplier=2,
                 padding='valid',
                 activation='relu'
             ),
-            keras.layers.MaxPooling2D(pool_size=(2, 2)),
-            keras.layers.Dropout(0.3),
-            keras.layers.Conv2D(
-                self.shape[0],
+            keras.layers.SeparableConv2D(
+                self.shape[0] + 4,
                 (3, 3),
+                depth_multiplier=2,
                 padding='valid',
                 activation='relu'
             ),
-            keras.layers.MaxPooling2D(pool_size=(2, 2)),
+            keras.layers.MaxPooling2D(pool_size=(1, 1)),
             keras.layers.Flatten(),
+            keras.layers.Dropout(0.4),
             keras.layers.Dense(
                 self.shape[0] * self.shape[1],
                 activation='relu'
             ),
-            keras.layers.Dropout(0.3),
             keras.layers.Dense(120, activation='softmax')
         ])
 
