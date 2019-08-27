@@ -87,7 +87,7 @@ def calculate_coupling_coefficients(b_ij):
 
     Parameters
     ----------
-    b_ij : np.array
+    b_ij : tf.Tensor
         The logits from capsule i --> capsule j.
 
     Returns
