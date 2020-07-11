@@ -43,3 +43,7 @@ def extract_and_transform_data(data_dir: str):
         )
 
     print(image_datasets)
+
+
+if __name__ == "__main__":
+    extract_and_transform_data("./Images")
