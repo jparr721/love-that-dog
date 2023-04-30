@@ -4,7 +4,7 @@ black==19.10b0
 click==7.1.2
 cycler==0.10.0
 flake8==3.8.3
-future==0.18.2
+future==0.18.3
 greenlet==0.4.16
 jedi==0.17.1
 kiwisolver==1.2.0
